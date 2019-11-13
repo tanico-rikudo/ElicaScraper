@@ -34,6 +34,9 @@ SEAVICE_NAME = 'ELICA SYSTEM'
 
 logging.basicConfig(level=logging.INFO)
 
+#独自
+class NotFoundError(Exception):
+    pass
 
 class UTIL:
 
@@ -41,6 +44,7 @@ class UTIL:
 		self.version = version
 		self.service_name =service_name 
 		self.dt_init = dt.now()
+		self.get_machine_localname()
 
 	def set_logger(self):
 		self.logger = logging.getLogger(self.service_name)
@@ -69,8 +73,24 @@ class UTIL:
 
 	@staticmethod
 	def get_machine_localname():
-		hostname = socket.gethostname()
-		
+		try:
+			hostname = socket.gethostname()
+			if hostname == 'Macico.local':
+				self.hostname = 'macico'
+			if hostname == 'elica03':
+				self.hostname = 'gcp'
+			else:
+				self.hostname = 'unknown'
+				raise NotFoundError('Cannot find host in known host list')
+
+		except NotFoundError as e:
+			self.util.logger.warning('[NG]Set unknown host: %s', e)
+
+		except Exception as e:
+			self.util.logger.warning('[NG]Cannot find host for unknown error: %s', e)
+			return False
+
+		return True
 
 
 
@@ -189,9 +209,12 @@ class ACCESS:
 		options = webdriver.ChromeOptions()
 		if self.headless:
 			options.add_argument('--headless')
-		# driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver") 
-		self.driver = webdriver.Chrome(options=options) 
-		# driver = webdriver.Chrome()
+
+		if self.util.hostname == 'gcp':
+			driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
+		if self.util.hostname == 'macico':
+			self.driver = webdriver.Chrome(options=options) 
+
 		return True
 
 	def del_driver(self):
