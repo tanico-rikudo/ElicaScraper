@@ -11,6 +11,7 @@ import subprocess
 import configparser
 import logging
 import csv
+import socket
 
 #crawl
 from selenium import webdriver
@@ -25,13 +26,13 @@ from email.utils import formatdate
 from timeout_decorator import timeout, TimeoutError
 
 MAIL_CONFIG		= '../conf/mail.conf' 
+MAIL_TO_LIST	= '../conf/send_list.csv'
 ELICA_CONFIG	= '../conf/elica.conf' 
+
 ENV = 'DEV'
 SEAVICE_NAME = 'ELICA SYSTEM'
-LS_TO_ADDRESS=['kazuyo.rikudo@gmail.com']#TODO : move it 
 
-
-logging.basicConfig(level=logging.INFO)#TODO : move it
+logging.basicConfig(level=logging.INFO)
 
 
 class UTIL:
@@ -43,8 +44,6 @@ class UTIL:
 
 	def set_logger(self):
 		self.logger = logging.getLogger(self.service_name)
-
-
 
 	def read_config(self,path_conf):
 		config = configparser.ConfigParser()
@@ -66,7 +65,13 @@ class UTIL:
 		except Exception as e:
 			self.util.logger.warning('Cannot execute cmd: %s', e)
 			return False
-		return True 	
+		return True
+
+	@staticmethod
+	def get_machine_localname():
+		hostname = socket.gethostname()
+		
+
 
 
 
@@ -78,13 +83,30 @@ class MAILER:
 		# read config and set
 		self.util.read_config(MAIL_CONFIG)
 		self.from_addr = self.util.config['FROM_ADDRESS']
-		self.ls_to_addr = LS_TO_ADDRESS
 		self.url_smtp =  self.util.config['URL_SMTP']
 		self.port_smtp = self.util.config['PORT_SMTP']
 		self.addr_login = self.util.config['LOGIN_ADDRESS']
 		self.pw_login = self.util.config['LOGIN_PW']
 		self.service_name = self.util.service_name
 		# self.obj_msg = {}
+
+	def read_ls_to_address():
+		try:
+			self.ls_to_addr = []
+			with open(MAIL_TO_LIST,'rb',encoding = 'utf-8') as f:
+				for _line  in csv.reader(f):
+					for _address in _line : 
+						self.ls_to_addr.append(_address)
+						self.util.logger.info('[OK]Add send email list: %s',_address)
+			self.util.logger.info('[OK]Get all address list')
+
+		except Exception as e:
+			self.util.logger.warning('[NG]Cannot read .csv of TO ADDR LIST:',e)
+			return False
+
+		return True
+
+
 
 
 	def set_smtp_obj(self):
