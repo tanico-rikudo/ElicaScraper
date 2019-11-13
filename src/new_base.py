@@ -10,6 +10,7 @@ import pickle
 import subprocess
 import configparser
 import logging
+import csv
 
 #crawl
 from selenium import webdriver
@@ -27,7 +28,8 @@ MAIL_CONFIG		= '../conf/mail.conf'
 ELICA_CONFIG	= '../conf/elica.conf' 
 ENV = 'DEV'
 SEAVICE_NAME = 'ELICA SYSTEM'
-LS_TO_ADDRESS=['kazuyo.rikudo@gmail.com']#TODO : move it
+LS_TO_ADDRESS=['kazuyo.rikudo@gmail.com']#TODO : move it 
+
 
 logging.basicConfig(level=logging.INFO)#TODO : move it
 
