@@ -198,7 +198,7 @@ class ACCESS:
 	def __init__(self):
 
 		#True/False
-		self.headless = False
+		self.headless = True
 
 		#set log
 		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
@@ -218,7 +218,8 @@ class ACCESS:
 		options = webdriver.ChromeOptions()
 		if self.headless:
 			options.add_argument('--headless')
-
+			options.add_argument('--disable-gpu')
+			options.add_argument('--disable-infobars')
 		if self.util.hostname == 'gcp':
 			driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
 		if self.util.hostname == 'macico':

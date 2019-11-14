@@ -47,7 +47,9 @@ def connection_test():
 			driver = webdriver.Chrome(options=options)
 
 		options.add_argument('--headless')
-
+		options.add_argument('--disable-gpu')
+		options.add_argument('--disable-infobars')
+		
 		driver.get('https://www.google.co.jp/')
 		print(driver.title) #=> Google
 		print('[OK]connection test')
