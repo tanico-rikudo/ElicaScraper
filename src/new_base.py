@@ -41,8 +41,15 @@ class NotFoundError(Exception):
 class UTIL:
 
 	def __init__(self,version,service_name):
+
+		# order should be kept
+		####  start
 		self.version = version
-		self.service_name =service_name 
+		self.service_name =service_name
+		self.set_logger()
+		#### end
+
+		# 
 		self.dt_init = dt.now()
 		self.get_machine_localname()
 
@@ -62,32 +69,32 @@ class UTIL:
 	def set_time(self):
 		self.now = datetime.datetime.now()
 
-	@staticmethod
-	def run_cmd(cmd):
+	def run_cmd(self,cmd):
 		try:
 			subprocess.call(cmd.split())
 		except Exception as e:
-			self.util.logger.warning('Cannot execute cmd: %s', e)
+			self.logger.warning('Cannot execute cmd: %s', e)
 			return False
 		return True
 
-	@staticmethod
-	def get_machine_localname():
+	def get_machine_localname(self):
 		try:
 			hostname = socket.gethostname()
 			if hostname == 'Macico.local':
 				self.hostname = 'macico'
-			if hostname == 'elica03':
+			elif hostname == 'elica03':
 				self.hostname = 'gcp'
 			else:
 				self.hostname = 'unknown'
-				raise NotFoundError('Cannot find host in known host list')
+				raise NotFoundError('Cannot find host in known host list : '+hostname)
+
+			self.logger.info('[OK]Set host: %s', hostname)
 
 		except NotFoundError as e:
-			self.util.logger.warning('[NG]Set unknown host: %s', e)
+			self.logger.warning('[NG]Set unknown host: %s', e)
 
 		except Exception as e:
-			self.util.logger.warning('[NG]Cannot find host for unknown error: %s', e)
+			self.logger.warning('[NG]Cannot find host for unknown error: %s', e)
 			return False
 
 		return True
@@ -98,7 +105,7 @@ class UTIL:
 class MAILER:
 	def __init__(self):
 		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
-		self.util.set_logger()
+
 		
 		# read config and set
 		self.util.read_config(MAIL_CONFIG)
@@ -192,7 +199,6 @@ class ACCESS:
 
 		#set log
 		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
-		self.util.set_logger()
 
 		# sec
 		self.default_timeout_sec = 200
@@ -325,7 +331,6 @@ class NIKKEI:
 		self.agent = ACCESS()
 		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
 		self.util.read_config(ELICA_CONFIG)
-		self.util.set_logger()
 		self.url_login = 'https://www.nikkei.com/login'
 		self.url_logout= 'https://regist.nikkei.com/ds/etc/accounts/logout'
 

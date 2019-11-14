@@ -32,19 +32,29 @@ def pkg_test():
 		from timeout_decorator import timeout, TimeoutError
 		print('[OK]pkg test')
 	except Exception as e:
-		print('pkg test error: %s',e)
+		print('pkg test error: ',e)
 
 
 def connection_test():
 	try:
 		options = Options()
+		import socket
+		hostname = socket.gethostname()
+
+		if hostname == 'elica03':
+			driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
+		if hostname == 'Macico.local':
+			driver = webdriver.Chrome(options=options)
+
 		options.add_argument('--headless')
-		driver = webdriver.Chrome(chrome_options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
+
 		driver.get('https://www.google.co.jp/')
 		print(driver.title) #=> Google
 		print('[OK]connection test')
+		driver.quit()
 	except Exception as e:
-		print('connection test error: %s',e)
+		print('connection test error: ',e)
+		driver.quit()
 
 
 if __name__ == '__main__':
