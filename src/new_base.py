@@ -35,7 +35,10 @@ SEAVICE_NAME = 'ELICA SYSTEM'
 logging.basicConfig(level=logging.INFO)
 
 #独自
-class NotFoundError(Exception):
+class NotFoundElementException(Exception):
+    pass
+
+class AccessFailedException(Exception):
     pass
 
 class UTIL:
@@ -73,7 +76,7 @@ class UTIL:
 		try:
 			subprocess.call(cmd.split())
 		except Exception as e:
-			self.logger.warning('Cannot execute cmd: %s', e)
+			self.logger.warning('[NG]Cannot execute cmd: %s', e)
 			return False
 		return True
 
@@ -86,11 +89,11 @@ class UTIL:
 				self.hostname = 'gcp'
 			else:
 				self.hostname = 'unknown'
-				raise NotFoundError('Cannot find host in known host list : '+hostname)
+				raise NotFoundElementException('Cannot find host in known host list : '+hostname)
 
 			self.logger.info('[OK]Set host: %s', hostname)
 
-		except NotFoundError as e:
+		except NotFoundElementException as e:
 			self.logger.warning('[NG]Set unknown host: %s', e)
 
 		except Exception as e:
@@ -117,10 +120,10 @@ class MAILER:
 		self.service_name = self.util.service_name
 		# self.obj_msg = {}
 
-	def read_ls_to_address():
+	def read_ls_to_address(self):
 		try:
 			self.ls_to_addr = []
-			with open(MAIL_TO_LIST,'rb',encoding = 'utf-8') as f:
+			with open(MAIL_TO_LIST,encoding = 'utf-8') as f:
 				for _line  in csv.reader(f):
 					for _address in _line : 
 						self.ls_to_addr.append(_address)
@@ -143,9 +146,9 @@ class MAILER:
 			self.obj_smtp.starttls()
 			self.obj_smtp.ehlo()
 			self.obj_smtp.login(self.addr_login, self.pw_login)
-			self.util.logger.info('Get smtp object')
+			self.util.logger.info('[OK]Get smtp object')
 		except Exception as e:
-			self.util.logger.warning('Cannot get smtp object:',e)
+			self.util.logger.warning('[OK]Cannot get smtp object:',e)
 			return False
 		return True
 
@@ -154,16 +157,16 @@ class MAILER:
 
 		if not self.obj_smtp is None:
 			try:
-				self.util.logger.info('Mail is sending for %s',str(self.ls_to_addr))
+				self.util.logger.info('[・]Mail is sending for %s',str(self.ls_to_addr))
 				self.obj_smtp.sendmail(self.from_addr, self.ls_to_addr, self.obj_msg.as_string())
-				self.util.logger.info('Mail is sent')
+				self.util.logger.info('[OK]Mail is sent')
 				self.obj_smtp.close()
 				return True
 			except Exception as e:
-				self.util.logger.warning('Cannot send mail: %s',e)		
+				self.util.logger.warning('[NG]Cannot send mail: %s',e)		
 				return False
 		else:
-			self.util.logger.warning('No smtp obj')	
+			self.util.logger.warning('[NG]No smtp obj')	
 			return False
 
 
@@ -176,9 +179,9 @@ class MAILER:
 			self.obj_msg['To']	= ", ".join(self.ls_to_addr)
 			self.obj_msg['Date']= formatdate()
 			self.obj_msg.attach(part)
-			self.util.logger.info('Get mail contents object')
+			self.util.logger.info('[OK]Get mail contents object')
 		except Exception as e:
-			self.util.logger.warning('Cannot make mail: %s',e)	
+			self.util.logger.warning('[NG]Cannot make mail: %s',e)	
 			return False
 
 		return True
@@ -226,16 +229,16 @@ class ACCESS:
 	def del_driver(self):
 		try:
 			self.driver.quit()
-			self.util.logger.info('Driver was killed')
+			self.util.logger.info('[OK]Driver was killed')
 		except Exception as e:
-			self.util.logger.warning('Driver wasn\'t killed')
+			self.util.logger.warning('[NG]Driver wasn\'t killed')
 			return False
 
 		try:
 			self.util.run_cmd('pkill -9 chromedriver')
-			self.util.logger.info('chromedriver pricess was killed')
+			self.util.logger.info('[NG]chromedriver process was killed')
 		except Exception as e:
-			self.util.logger.warning('chromedriver pricess wasn\'t killed:')
+			self.util.logger.warning('[NG]chromedriver process wasn\'t killed:')
 			return False
 
 		return True
@@ -260,28 +263,28 @@ class ACCESS:
 
 		try:
 			access_page(url)
-			self.util.logger.info('Driver get web page: %s',url)
+			self.util.logger.info('[OK]Driver get web page: %s',url)
 			self.ls_url_sucess.append(url)
 		except TimeoutError :
-			self.util.logger.warning('Driver cannot get web page: %s',url)
+			self.util.logger.warning('[NG]Driver cannot get web page for timeout: %s',url)
 			self.ls_url_failed.append(url)
 			return False
 		except Exception as e:
-			self.util.logger.warning('Driver occur error in access page: %s',e)	
+			self.util.logger.warning('[NG]Driver occur error in access page: %s',e)	
 			self.ls_url_failed.append(url)
 			return False
 
 		if waittime>0:
-			self.util.logger.info('Driver enter wait time : %d',waittime)
+			self.util.logger.info('[・]Driver enter wait time : %d',waittime)
 			time.sleep(waittime)
-			self.util.logger.info('Driver restart from wait time')
+			self.util.logger.info('[OK]Driver restart from wait time')
 
 		return True
 
 
 
 	def get_login_page(self,url,allow_revisit=True,**kwargs):
-		self.util.logger.info('Driver get to login status')
+		self.util.logger.info('[・]Driver get to login status')
 		#remove logout address #TODO
 
 		access_kwargs = {}
@@ -293,17 +296,26 @@ class ACCESS:
 		try:
 			if (url not in self.ls_url_sucess)or(allow_revisit):
 				status = self.to_page(url,**access_kwargs)
+				if status:
+					self.util.logger.info('[OK]Driver passed login process')
+				else:
+					raise AccessFailedException()
 			else:
-				self.util.logger.info('Driver don\'t need to pass login process')
+				self.util.logger.info('[・]Driver don\'t need to pass login process')
+
+		except AccessFailedException as e:
+			self.util.logger.warning('[NG]Driver cannot access login page: %s',e)	
+			return False
+
 		except Exception as e:
-			self.util.logger.warning('Driver occur error in login master: %s',e)	
+			self.util.logger.warning('[NG]Driver occur error in login master: %s',e)	
 			return False
 		return True
 
 
 
 	def get_logout_page(self,url,allow_revisit=True,**kwargs):
-		self.util.logger.info('Driver get to logout status')
+		self.util.logger.info('[・]Driver get to logout status')
 		#remove login address #TODO
 
 		access_kwargs = {}
@@ -315,10 +327,18 @@ class ACCESS:
 		try:
 			if (url not in self.ls_url_sucess)or(allow_revisit):
 				status = self.to_page(url,**access_kwargs)
+				if status:
+					self.util.logger.info('[OK]Driver passed logout process')
+				else:
+					raise AccessFailedException()
 			else:
-				self.util.logger.info('Driver don\'t need to pass logout process')
+				self.util.logger.info('[・]Driver don\'t need to pass logout process')
+
+		except AccessFailedException as e:
+			self.util.logger.warning('[NG]Driver cannot access logout page: %s',e)	
+			return False
 		except Exception as e:
-			self.util.logger.warning('Driver occur error in logout master: %s',e)	
+			self.util.logger.warning('[NG]Driver occur error in logout master: %s',e)	
 			return False
 		return True
 
@@ -368,14 +388,14 @@ class NIKKEI:
 		self.login()
 
 		# get paper obj 
-		self.util.logger.info('Accessing Web page..')
+		self.util.logger.info('[・]Accessing Web page..')
 		is_obj = self.agent.to_page(self.get_paper_url(),**{'waittime':30})
 
 		if not is_obj:
-			self.util.logger.warning('Access is failed : May be not available today?')
+			self.util.logger.warning('[NG]Access is failed : May be not available today?')
 			return False
 
-		self.util.logger.info('Scraping Web page..')
+		self.util.logger.info('[・]Scraping Web page..')
 		obj_content = self.scrape_paper()
 
 		# make subject
@@ -384,20 +404,20 @@ class NIKKEI:
 
 		# discard session
 		self.logout()
-		self.util.logger.info('Get content from web pagesucessfly')
+		self.util.logger.info('[OK]Get content from web pagesucessfly')
 		self.agent.del_driver()
 
 		return  str_subject, obj_content
 
 	def login(self):
-		self.agent.get_login_page(self.url_login, allow_revisit=True, **{'waittime':30,'timeout_sec':120}	)
+		self.agent.get_login_page(self.url_login, allow_revisit=True, **{'waittime':10,'timeout_sec':120}	)
 		self.agent.driver.find_element_by_id('LA7010Form01:LA7010Email').send_keys(self.util.config['ID'])
 		self.agent.driver.find_element_by_id('LA7010Form01:LA7010Password').send_keys(self.util.config['PW'])
 		self.agent.driver.find_element_by_class_name("btnM1").click();
 		return 
 
 	def logout(self):
-		self.agent.get_logout_page(self.url_logout, allow_revisit=True, **{'waittime':10} )
+		self.agent.get_logout_page(self.url_logout, allow_revisit=True, **{'waittime':10,'timeout_sec':120} )
 		return 	
 
 	def scrape_paper(self):
@@ -581,15 +601,16 @@ def get_nikkei_and_mail():
 	obj_nikkei = NIKKEI()
 
 	str_subject,obj_content = obj_nikkei.get_contents_in_paper()
-	save_pickle(obj_content,'content.pickle')
-
+	# # save_pickle(obj_content,'content.pickle')
 	# obj_content = read_pickle('content.pickle')
 	body_html = obj_nikkei.make_html(obj_content)
 	# save_pickle(body_html,'body.pickle')
+	# str_subject = 'test'
 
 
 	obj_mailer = MAILER()
 	obj_mailer.set_smtp_obj()
+	obj_mailer.read_ls_to_address()
 	obj_mailer.make_content(str_subject,body_html)
 	obj_mailer.exec_send()
 	return 
