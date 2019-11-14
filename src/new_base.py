@@ -221,7 +221,7 @@ class ACCESS:
 			options.add_argument('--disable-gpu')
 			options.add_argument('--disable-infobars')
 		if self.util.hostname == 'gcp':
-			driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
+			self.driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
 		if self.util.hostname == 'macico':
 			self.driver = webdriver.Chrome(options=options) 
 
