@@ -41,15 +41,17 @@ def connection_test():
 		import socket
 		hostname = socket.gethostname()
 
+		options.add_argument('--headless')
+		options.add_argument('--disable-gpu')
+		options.add_argument('--disable-infobars')
+
 		if hostname == 'elica03':
 			driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
 		if hostname == 'Macico.local':
 			driver = webdriver.Chrome(options=options)
 
-		options.add_argument('--headless')
-		options.add_argument('--disable-gpu')
-		options.add_argument('--disable-infobars')
-		
+
+
 		driver.get('https://www.google.co.jp/')
 		print(driver.title) #=> Google
 		print('[OK]connection test')
