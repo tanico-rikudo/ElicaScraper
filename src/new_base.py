@@ -25,6 +25,7 @@ from email.utils import formatdate
 
 from timeout_decorator import timeout, TimeoutError
 
+# cron is run when current dir. pls move to your dir 
 MAIL_CONFIG		= '../conf/mail.conf' 
 MAIL_TO_LIST	= '../conf/send_list.csv'
 ELICA_CONFIG	= '../conf/elica.conf' 
@@ -212,12 +213,15 @@ class ACCESS:
 
 		#driver
 		self.set_driver()
+		self.browser_height = self.util.config['BROWSER_HEIGHT']
+		self.browser_width  = self.util.config['BROWSER_WIDTH']
 
 
 	def set_driver(self):
 		options = webdriver.ChromeOptions()
 		if self.headless:
 			options.add_argument('--headless')
+			options.add_argument('--window-size='+str(self.browser_width)+','+str(self.browser_height))
 			options.add_argument('--disable-gpu')
 			options.add_argument('--disable-infobars')
 		if self.util.hostname == 'gcp':
@@ -242,6 +246,25 @@ class ACCESS:
 			self.util.logger.warning('[NG]chromedriver process wasn\'t killed:')
 			return False
 
+		return True
+
+    def scroll_page(self, width, height):
+    	try:
+	        self.driver.execute_script("window.scrollTo(" + str(width) + "+, " + str(height) + ");")
+	        self.util.logger.info('[OK]Scrolled')	
+	    except Exception as e:
+			self.util.logger.info('[NG]Cannot scroll')
+			return False
+		return True
+
+	def stop_driver(self,time_for_wait):
+		try:
+			self.util.logger.info('[・]Driver enter wait time : %d',time_for_wait)
+			time.sleep(time_for_wait)
+			self.util.logger.info('[OK]Driver restart from wait time')
+		except Exception as e:
+			self.util.logger.warning('[NG]Driver occur error in waiting: %s',e)
+			return False
 		return True
 
 
@@ -276,9 +299,7 @@ class ACCESS:
 			return False
 
 		if waittime>0:
-			self.util.logger.info('[・]Driver enter wait time : %d',waittime)
-			time.sleep(waittime)
-			self.util.logger.info('[OK]Driver restart from wait time')
+			self.stop_driver(waittime)
 
 		return True
 
@@ -549,6 +570,129 @@ class NIKKEI:
 
 		return body
 
+class BLOOMBERG:
+	def __init__(self):
+		self.agent = ACCESS()
+		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
+		self.util.read_config(ELICA_CONFIG)
+
+
+	def get_edition_paper(self,obj_dt=None,type='en'):
+		# set dt
+		if obj_dt is None:
+			obj_dt = self.util.dt_init
+
+		# set edition
+		str_edition_paper=  "morning" if obj_dt.hour < 15 else "evening"
+
+		# translate
+		if type=='ja':
+			dct_en_ja = {'morning':'朝','evening':'夕'}
+			str_edition_paper = dct_en_ja[str_edition_paper]
+
+		return str_edition_paper
+
+	def get_paper_url(self,obj_dt=None):
+
+		# set dt
+		if obj_dt is None:
+			obj_dt = self.util.dt_init
+
+		# construct url
+		url_paper = 
+
+		return url_paper
+
+	def get_contents_in_paper(self):
+
+		# get paper obj 
+		self.util.logger.info('[・]Accessing Web page..')
+		is_obj = self.agent.to_page('https://www.bloomberg.co.jp/',**{'waittime':30})
+
+		# make subject		
+		str_subject = "{0:%Y%m%d %H%M}".format(self.util.dt_init)+'Bloomberg一覧'
+
+		if is_obj:
+			self.util.logger.info('[・]Scraping Web page..')
+			obj_content = self.scrape_paper()
+
+
+			str_subject = "{0:%Y%m%d %H%M}".format(self.util.dt_init)+'Bloomberg一覧'
+
+			# discard session
+			self.util.logger.info('[OK]Get content from web pagesucessfly')
+			self.agent.del_driver()
+		else:
+			self.util.logger.warning('[NG]Access is failed : May be not available')
+			str_subject = '[NG]'+str_subject
+			obj_content = None
+
+
+		return  str_subject, obj_content
+
+
+	def scrape_paper(self):
+		ls_body = []
+		try:
+			self.agent.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+			self.agent.driver.stop_driver(15)
+			self.agent.driver.execute_script("window.scrollTo(0, 0;")
+			self.agent.driver.stop_driver(15)
+			self.agent.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")		
+			self.agent.driver.stop_driver(15)
+			self.agent.driver.execute_script("window.scrollTo(0, 0;")
+			self.agent.driver.stop_driver(15)
+			try:
+
+				#hub-lazy-zones も含まれる
+				ls_el_section = self.agent.driver.find_elements_by_css_selector('section.hub-zone-righty')
+
+				for el_section in ls_el_section:
+					el_section.find_elements_by_css_selector('section')
+						el_section.find_elements_by_css_selector('hero-module')
+						el_section.find_elements_by_css_selector('story-list-module')
+					el_section.find_elements_by_css_selector('section.hub-zone-righty__content > section')
+						el_section.find_elements_by_css_selector('hero-module')
+						el_section.find_elements_by_css_selector('story-list-module')
+
+
+
+					ls_el_large_topics = el_section.find_elements_by_css_selector('a.shero-module__headline-link')
+					for el_large_topics in ls_el_large_topics:
+						txt_large_topic = ls_el_large_topics.text
+						href_large_topic = ls_el_large_topics.get_attribute("href")
+
+					ls_el_small_topics = el_section.find_elements_by_css_selector('a.story-list-story__info__headline-link')
+					for el_small_topics in ls_el_small_topics:
+						txt_small_topic = ls_el_small_topics.text
+						href_small_topic = ls_el_small_topics.get_attribute("href")
+
+		except Exception as e:
+			self.util.logger.warning('[NG] ???(Cannot find sections): %s',e)
+
+		return ls_body		
+
+
+	@staticmethod
+	def make_html(obj_content):
+		body =''
+		for obj_section in obj_content:
+			if isinstance(obj_section['section_name'],str):
+				body += '=== {0} ===<br>'.format(obj_section['section_name']) 
+
+			for obj_top_news in obj_section['ls_top_news']:
+				if isinstance(obj_top_news,str):
+					body += '　★ {0}<br>'.format(obj_top_news)
+			for obj_article in obj_section['ls_article']:
+				if isinstance(obj_article,str):
+					body += '　・{0}<br>'.format(obj_article)
+				else:
+					for obj_small_article in obj_article:
+						body += '　　・{0}<br>'.format(obj_small_article)
+			body += '<br>'
+
+		return body
+
 
 
 class NEWSPICKS:
@@ -608,6 +752,22 @@ def get_nikkei_and_mail():
 	# save_pickle(body_html,'body.pickle')
 	# str_subject = 'test'
 
+	obj_mailer = MAILER()
+	obj_mailer.set_smtp_obj()
+	obj_mailer.read_ls_to_address()
+	obj_mailer.make_content(str_subject,body_html)
+	obj_mailer.exec_send()
+	return 
+
+def get_blbrg_and_mail():
+	obj_blbrg = BLOOMBERG()
+
+	str_subject,obj_content = obj_blbrg.get_contents()
+	# # save_pickle(obj_content,'content.pickle')
+	# obj_content = read_pickle('content.pickle')
+	body_html = obj_blbrg.make_html(obj_content)
+	# save_pickle(body_html,'body.pickle')
+	# str_subject = 'test'
 
 	obj_mailer = MAILER()
 	obj_mailer.set_smtp_obj()
@@ -616,11 +776,11 @@ def get_nikkei_and_mail():
 	obj_mailer.exec_send()
 	return 
 
-def make_newspicks_mail():
-	body = add_system_credit(newspicks_access())
-	time_p_str =  "朝" if now.time().hour < 15 else "夕"
-	subject = "{0:%Y%m%d}".format(now)+'Newspicks('+time_p_str+')一覧'
-	return (body,subject)
+# def make_newspicks_mail():
+# 	body = add_system_credit(newspicks_access())
+# 	time_p_str =  "朝" if now.time().hour < 15 else "夕"
+# 	subject = "{0:%Y%m%d}".format(now)+'Newspicks('+time_p_str+')一覧'
+# 	return (body,subject)
 
 def save_pickle(obj,name):
 	# name = folder + name
@@ -637,6 +797,7 @@ def read_pickle(name):
 
 if __name__ == '__main__':
 	get_nikkei_and_mail()
+	get_blbrg_and_mail()
 	# (body,subject) = make_nikkei_mail()
 	# send_action(subject,body)
 
