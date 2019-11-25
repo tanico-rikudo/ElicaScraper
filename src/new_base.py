@@ -37,10 +37,10 @@ logging.basicConfig(level=logging.INFO)
 
 #独自
 class NotFoundElementException(Exception):
-    pass
+	pass
 
 class AccessFailedException(Exception):
-    pass
+	pass
 
 class UTIL:
 
@@ -203,6 +203,7 @@ class ACCESS:
 
 		#set log
 		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
+		self.util.read_config(ELICA_CONFIG)
 
 		# sec
 		self.default_timeout_sec = 200
@@ -211,16 +212,18 @@ class ACCESS:
 		self.ls_url_sucess = []
 		self.ls_url_failed = []
 
-		#driver
-		self.set_driver()
+
+
 		self.browser_height = self.util.config['BROWSER_HEIGHT']
 		self.browser_width  = self.util.config['BROWSER_WIDTH']
 
+		#driver
+		self.set_driver()
 
 	def set_driver(self):
 		options = webdriver.ChromeOptions()
 		if self.headless:
-			options.add_argument('--headless')
+			# options.add_argument('--headless')
 			options.add_argument('--window-size='+str(self.browser_width)+','+str(self.browser_height))
 			options.add_argument('--disable-gpu')
 			options.add_argument('--disable-infobars')
@@ -248,11 +251,11 @@ class ACCESS:
 
 		return True
 
-    def scroll_page(self, width, height):
-    	try:
-	        self.driver.execute_script("window.scrollTo(" + str(width) + "+, " + str(height) + ");")
-	        self.util.logger.info('[OK]Scrolled')	
-	    except Exception as e:
+	def scroll_page(self, width, height):
+		try:
+			self.driver.execute_script("window.scrollTo(" + str(width) + "+, " + str(height) + ");")
+			self.util.logger.info('[OK]Scrolled')	
+		except Exception as e:
 			self.util.logger.info('[NG]Cannot scroll')
 			return False
 		return True
@@ -577,33 +580,7 @@ class BLOOMBERG:
 		self.util.read_config(ELICA_CONFIG)
 
 
-	def get_edition_paper(self,obj_dt=None,type='en'):
-		# set dt
-		if obj_dt is None:
-			obj_dt = self.util.dt_init
-
-		# set edition
-		str_edition_paper=  "morning" if obj_dt.hour < 15 else "evening"
-
-		# translate
-		if type=='ja':
-			dct_en_ja = {'morning':'朝','evening':'夕'}
-			str_edition_paper = dct_en_ja[str_edition_paper]
-
-		return str_edition_paper
-
-	def get_paper_url(self,obj_dt=None):
-
-		# set dt
-		if obj_dt is None:
-			obj_dt = self.util.dt_init
-
-		# construct url
-		url_paper = 
-
-		return url_paper
-
-	def get_contents_in_paper(self):
+	def get_contents(self):
 
 		# get paper obj 
 		self.util.logger.info('[・]Accessing Web page..')
@@ -635,40 +612,39 @@ class BLOOMBERG:
 		ls_body = []
 		try:
 			self.agent.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			self.agent.driver.stop_driver(15)
+			self.agent.stop_driver(15)
 			self.agent.driver.execute_script("window.scrollTo(0, 0;")
-			self.agent.driver.stop_driver(15)
+			self.agent.stop_driver(15)
 			self.agent.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")		
-			self.agent.driver.stop_driver(15)
+			self.agent.stop_driver(15)
 			self.agent.driver.execute_script("window.scrollTo(0, 0;")
-			self.agent.driver.stop_driver(15)
-			try:
-
-				#hub-lazy-zones も含まれる
-				ls_el_section = self.agent.driver.find_elements_by_css_selector('section.hub-zone-righty')
-
-				for el_section in ls_el_section:
-					el_section.find_elements_by_css_selector('section')
-						el_section.find_elements_by_css_selector('hero-module')
-						el_section.find_elements_by_css_selector('story-list-module')
-					el_section.find_elements_by_css_selector('section.hub-zone-righty__content > section')
-						el_section.find_elements_by_css_selector('hero-module')
-						el_section.find_elements_by_css_selector('story-list-module')
-
-
-
-					ls_el_large_topics = el_section.find_elements_by_css_selector('a.shero-module__headline-link')
-					for el_large_topics in ls_el_large_topics:
-						txt_large_topic = ls_el_large_topics.text
-						href_large_topic = ls_el_large_topics.get_attribute("href")
-
-					ls_el_small_topics = el_section.find_elements_by_css_selector('a.story-list-story__info__headline-link')
-					for el_small_topics in ls_el_small_topics:
-						txt_small_topic = ls_el_small_topics.text
-						href_small_topic = ls_el_small_topics.get_attribute("href")
+			self.agent.stop_driver(15)
 
 		except Exception as e:
-			self.util.logger.warning('[NG] ???(Cannot find sections): %s',e)
+			self.util.logger.warning('[NG] Driver scroll error: %s',e)
+			return ls_body
+		try:
+
+			#hub-lazy-zones も含まれる
+			ls_el_section = self.agent.driver.find_elements_by_css_selector('section.hub-zone-righty')
+
+			#each large section
+			for el_section in ls_el_section:
+				ls_el_small_section =  el_section.find_elements_by_css_selector('section')
+				for el_small_section in ls_el_small_section:
+					class_name = el_small_section.get_attribute("class")
+					if class_name == 'section-front-header-module':
+						print(el_small_section.text)
+					else:
+						print('top')
+					if class_name in ['hero-module','story-list-module']:
+						ls_el_article =  el_small_section.find_elements_by_css_selector('article.mod-story')
+						for el_article in ls_el_article:
+							print(el_article.text)
+		except Exception as e:
+			self.util.logger.warning('[NG] Driver occur some error: %s',e)
+			return ls_body
+
 
 		return ls_body		
 
@@ -693,53 +669,6 @@ class BLOOMBERG:
 
 		return body
 
-
-
-class NEWSPICKS:
-	def __init__():
-		pass
-
-
-
-	def newspicks_access():
-		driver = setup()
-		body = "<br>"
-		
-		# access
-		driver.get('https://newspicks.com/theme-news/technology/')
-		time.sleep(10)
-		body = body + '<br>★テクノロジー★<br>'+newspicks_search(driver)
-
-		# driver.get('https://newspicks.com/theme-news/innovation/')
-		# time.sleep(10)
-		# body = body + '<br>★イノベーション★<br>'+newspicks_search(driver)
-
-		driver.quit()
-		print("ACCESS SEND!")
-		return  body
-
-	def newspicks_search(driver):
-
-		body = ""
-
-		sections = driver.find_elements_by_css_selector('.news-card')
-		# print("<"+sections.text+">") 
-		for section in sections:
-			# titl
-			attr =section.find_element_by_tag_name('a')
-			href = attr.get_attribute('href')
-			attr = attr.find_elements_by_tag_name('div')[1]
-			# print("<"+attr.text+">") 
-			text = attr.text
-			title = attr.get_attribute('title')
-			if len(title) > len(text):
-				# print("<"+title+">") 
-				body += ('・<a href='+href+'>'+title+'</a><br>')
-			else:
-				body += ('・<a href='+href+'>'+text+'</a><br>')			
-			# except:
-
-		return body
 
 
 def get_nikkei_and_mail():
@@ -769,11 +698,11 @@ def get_blbrg_and_mail():
 	# save_pickle(body_html,'body.pickle')
 	# str_subject = 'test'
 
-	obj_mailer = MAILER()
-	obj_mailer.set_smtp_obj()
-	obj_mailer.read_ls_to_address()
-	obj_mailer.make_content(str_subject,body_html)
-	obj_mailer.exec_send()
+	# obj_mailer = MAILER()
+	# obj_mailer.set_smtp_obj()
+	# obj_mailer.read_ls_to_address()
+	# obj_mailer.make_content(str_subject,body_html)
+	# obj_mailer.exec_send()
 	return 
 
 # def make_newspicks_mail():
@@ -796,7 +725,7 @@ def read_pickle(name):
 
 
 if __name__ == '__main__':
-	get_nikkei_and_mail()
+	# get_nikkei_and_mail()
 	get_blbrg_and_mail()
 	# (body,subject) = make_nikkei_mail()
 	# send_action(subject,body)
