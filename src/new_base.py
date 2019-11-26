@@ -223,7 +223,7 @@ class ACCESS:
 	def set_driver(self):
 		options = webdriver.ChromeOptions()
 		if self.headless:
-			# options.add_argument('--headless')
+			options.add_argument('--headless')
 			options.add_argument('--window-size='+str(self.browser_width)+','+str(self.browser_height))
 			options.add_argument('--disable-gpu')
 			options.add_argument('--disable-infobars')
