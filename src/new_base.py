@@ -584,7 +584,7 @@ class BLOOMBERG:
 
 		# get paper obj 
 		self.util.logger.info('[・]Accessing Web page..')
-		is_obj = self.agent.to_page('https://www.bloomberg.co.jp/',**{'waittime':30})
+		is_obj = self.agent.to_page('https://www.bloomberg.co.jp/',**{'waittime':5})
 
 		# make subject		
 		str_subject = "{0:%Y%m%d %H%M}".format(self.util.dt_init)+'Bloomberg一覧'
@@ -594,7 +594,7 @@ class BLOOMBERG:
 			obj_content = self.scrape_paper()
 
 
-			str_subject = "{0:%Y%m%d %H%M}".format(self.util.dt_init)+'Bloomberg一覧'
+			str_subject = "{0:%Y%m%d}".format(self.util.dt_init)+'Bloomberg('+"{0:%H:%M}".format(self.util.dt_init)+')一覧'
 
 			# discard session
 			self.util.logger.info('[OK]Get content from web pagesucessfly')
@@ -612,13 +612,13 @@ class BLOOMBERG:
 		ls_body = []
 		try:
 			self.agent.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			self.agent.stop_driver(15)
-			self.agent.driver.execute_script("window.scrollTo(0, 0;")
-			self.agent.stop_driver(15)
+			self.agent.stop_driver(30)
+			self.agent.driver.execute_script("window.scrollTo(0, 0);")
+			self.agent.stop_driver(1)
 			self.agent.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")		
-			self.agent.stop_driver(15)
-			self.agent.driver.execute_script("window.scrollTo(0, 0;")
-			self.agent.stop_driver(15)
+			self.agent.stop_driver(30)
+			self.agent.driver.execute_script("window.scrollTo(0, 0);")
+			self.agent.stop_driver(1)
 
 		except Exception as e:
 			self.util.logger.warning('[NG] Driver scroll error: %s',e)
@@ -626,21 +626,65 @@ class BLOOMBERG:
 		try:
 
 			#hub-lazy-zones も含まれる
-			ls_el_section = self.agent.driver.find_elements_by_css_selector('section.hub-zone-righty')
+			ls_el_large_section = self.agent.driver.find_elements_by_css_selector('section.hub-zone-righty__content')
+			self.util.logger.info('[OK] Driver list up large %d sections',len(ls_el_large_section))
+			# ls_el_section = self.agent.driver.find_elements_by_css_selector('article.mod-story')
 
-			#each large section
+			##### TOP ####
+			el_large_section = ls_el_large_section[0]
+			ls_el_section = el_large_section.find_elements_by_css_selector('section')
+			ls_el_section = [ el_section for el_section in ls_el_section if el_section.get_attribute('class') in ['hero-module','story-list-module','section-front-header-module']]
+			self.util.logger.info('[OK] Driver list up %d top newses',len(ls_el_section))
+
+			dct_section = {}
+			dct_section['section_name'] = "TOP"
+			ls_el_article = ls_el_section[0].find_elements_by_css_selector('article.mod-story')
+			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
+			ls_body.append(dct_section)
+			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+
+			dct_section = {}
+			dct_section['section_name'] = "Second"
+			ls_el_article = ls_el_section[1].find_elements_by_css_selector('article.mod-story')
+			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
+			ls_body.append(dct_section)
+			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+
+			dct_section = {}
+			dct_section['section_name'] = "Topics"
+			ls_el_article = ls_el_section[1].find_elements_by_css_selector('article.mod-story')
+			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
+			ls_body.append(dct_section)
+			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+
+			##### SECOND ####
+			el_large_section = ls_el_large_section[1]
+			ls_el_section = el_large_section.find_elements_by_css_selector('section')
+			ls_el_section = [ el_section for el_section in ls_el_section if el_section.get_attribute('class') in ['story-list-module','section-front-header-module']]
+			self.util.logger.info('[OK] Driver list up %d second newses',len(ls_el_section))
+
+			dct_section = {}
+			dct_section['section_name'] = ls_el_section[0].text
+			ls_el_article = ls_el_section[1].find_elements_by_css_selector('article.mod-story')
+			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
+			ls_body.append(dct_section)
+			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+
+			##### Small grids ####
+			el_large_section = ls_el_large_section[2]
+			ls_el_section = el_large_section.find_elements_by_css_selector('section')
+			ls_el_section = [ el_section for el_section in ls_el_section if el_section.get_attribute('class') in ['grid-module']]
+			self.util.logger.info('[OK] Driver list up %d small newses',len(ls_el_section))
+
 			for el_section in ls_el_section:
-				ls_el_small_section =  el_section.find_elements_by_css_selector('section')
-				for el_small_section in ls_el_small_section:
-					class_name = el_small_section.get_attribute("class")
-					if class_name == 'section-front-header-module':
-						print(el_small_section.text)
-					else:
-						print('top')
-					if class_name in ['hero-module','story-list-module']:
-						ls_el_article =  el_small_section.find_elements_by_css_selector('article.mod-story')
-						for el_article in ls_el_article:
-							print(el_article.text)
+				
+				dct_section = {}
+				dct_section['section_name'] = el_section.find_element_by_css_selector('.grid-module__title').text
+				ls_el_article = el_section.find_elements_by_css_selector('article.mod-story')
+				dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
+				ls_body.append(dct_section)
+				self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+
 		except Exception as e:
 			self.util.logger.warning('[NG] Driver occur some error: %s',e)
 			return ls_body
@@ -653,18 +697,11 @@ class BLOOMBERG:
 	def make_html(obj_content):
 		body =''
 		for obj_section in obj_content:
-			if isinstance(obj_section['section_name'],str):
-				body += '=== {0} ===<br>'.format(obj_section['section_name']) 
+			body += '=== {0} ===<br>'.format(obj_section['section_name']) 
 
-			for obj_top_news in obj_section['ls_top_news']:
-				if isinstance(obj_top_news,str):
-					body += '　★ {0}<br>'.format(obj_top_news)
 			for obj_article in obj_section['ls_article']:
-				if isinstance(obj_article,str):
-					body += '　・{0}<br>'.format(obj_article)
-				else:
-					for obj_small_article in obj_article:
-						body += '　　・{0}<br>'.format(obj_small_article)
+				body += '　・{0}<br>'.format(obj_article)
+
 			body += '<br>'
 
 		return body
@@ -698,11 +735,11 @@ def get_blbrg_and_mail():
 	# save_pickle(body_html,'body.pickle')
 	# str_subject = 'test'
 
-	# obj_mailer = MAILER()
-	# obj_mailer.set_smtp_obj()
-	# obj_mailer.read_ls_to_address()
-	# obj_mailer.make_content(str_subject,body_html)
-	# obj_mailer.exec_send()
+	obj_mailer = MAILER()
+	obj_mailer.set_smtp_obj()
+	obj_mailer.read_ls_to_address()
+	obj_mailer.make_content(str_subject,body_html)
+	obj_mailer.exec_send()
 	return 
 
 # def make_newspicks_mail():
