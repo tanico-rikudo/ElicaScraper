@@ -244,7 +244,7 @@ class ACCESS:
 
 		try:
 			self.util.run_cmd('pkill -9 chromedriver')
-			self.util.logger.info('[NG]chromedriver process was killed')
+			self.util.logger.info('[OK]chromedriver process was killed')
 		except Exception as e:
 			self.util.logger.warning('[NG]chromedriver process wasn\'t killed:')
 			return False
@@ -627,54 +627,54 @@ class BLOOMBERG:
 
 			#hub-lazy-zones も含まれる
 			ls_el_large_section = self.agent.driver.find_elements_by_css_selector('section.hub-zone-righty__content')
-			self.util.logger.info('[OK] Driver list up large %d sections',len(ls_el_large_section))
+			self.util.logger.info('[・] Driver list up large %d sections',len(ls_el_large_section))
 			# ls_el_section = self.agent.driver.find_elements_by_css_selector('article.mod-story')
 
 			##### TOP ####
 			el_large_section = ls_el_large_section[0]
 			ls_el_section = el_large_section.find_elements_by_css_selector('section')
 			ls_el_section = [ el_section for el_section in ls_el_section if el_section.get_attribute('class') in ['hero-module','story-list-module','section-front-header-module']]
-			self.util.logger.info('[OK] Driver list up %d top newses',len(ls_el_section))
+			self.util.logger.info('[・] Driver list up %d top newses',len(ls_el_section))
 
 			dct_section = {}
 			dct_section['section_name'] = "TOP"
 			ls_el_article = ls_el_section[0].find_elements_by_css_selector('article.mod-story')
 			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
 			ls_body.append(dct_section)
-			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+			self.util.logger.info('[・] Driver get : %s',dct_section['section_name'])
 
 			dct_section = {}
 			dct_section['section_name'] = "Second"
 			ls_el_article = ls_el_section[1].find_elements_by_css_selector('article.mod-story')
 			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
 			ls_body.append(dct_section)
-			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+			self.util.logger.info('[・] Driver get : %s',dct_section['section_name'])
 
 			dct_section = {}
 			dct_section['section_name'] = "Topics"
 			ls_el_article = ls_el_section[1].find_elements_by_css_selector('article.mod-story')
 			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
 			ls_body.append(dct_section)
-			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+			self.util.logger.info('[・] Driver get : %s',dct_section['section_name'])
 
 			##### SECOND ####
 			el_large_section = ls_el_large_section[1]
 			ls_el_section = el_large_section.find_elements_by_css_selector('section')
 			ls_el_section = [ el_section for el_section in ls_el_section if el_section.get_attribute('class') in ['story-list-module','section-front-header-module']]
-			self.util.logger.info('[OK] Driver list up %d second newses',len(ls_el_section))
+			self.util.logger.info('[・] Driver list up %d second newses',len(ls_el_section))
 
 			dct_section = {}
 			dct_section['section_name'] = ls_el_section[0].text
 			ls_el_article = ls_el_section[1].find_elements_by_css_selector('article.mod-story')
 			dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
 			ls_body.append(dct_section)
-			self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+			self.util.logger.info('[・] Driver get : %s',dct_section['section_name'])
 
 			##### Small grids ####
 			el_large_section = ls_el_large_section[2]
 			ls_el_section = el_large_section.find_elements_by_css_selector('section')
 			ls_el_section = [ el_section for el_section in ls_el_section if el_section.get_attribute('class') in ['grid-module']]
-			self.util.logger.info('[OK] Driver list up %d small newses',len(ls_el_section))
+			self.util.logger.info('[・] Driver list up %d small newses',len(ls_el_section))
 
 			for el_section in ls_el_section:
 				
@@ -683,7 +683,9 @@ class BLOOMBERG:
 				ls_el_article = el_section.find_elements_by_css_selector('article.mod-story')
 				dct_section['ls_article'] = [ el_article.text for el_article in ls_el_article ]
 				ls_body.append(dct_section)
-				self.util.logger.info('[OK] Driver get : %s',dct_section['section_name'])
+				self.util.logger.info('[・] Driver get : %s',dct_section['section_name'])
+
+			self.util.logger.info('[OK] Driver get ALL expected contents')
 
 		except Exception as e:
 			self.util.logger.warning('[NG] Driver occur some error: %s',e)
