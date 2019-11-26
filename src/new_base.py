@@ -764,7 +764,7 @@ def read_pickle(name):
 
 
 if __name__ == '__main__':
-	# get_nikkei_and_mail()
+	get_nikkei_and_mail()
 	get_blbrg_and_mail()
 	# (body,subject) = make_nikkei_mail()
 	# send_action(subject,body)
