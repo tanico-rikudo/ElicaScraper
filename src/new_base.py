@@ -227,6 +227,7 @@ class ACCESS:
 			options.add_argument('--window-size='+str(self.browser_width)+','+str(self.browser_height))
 			options.add_argument('--disable-gpu')
 			options.add_argument('--disable-infobars')
+			options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36")
 		if self.util.hostname == 'gcp':
 			self.driver = webdriver.Chrome(options=options,executable_path="/home/kotetsu219specialpartner/bin/chromedriver")
 		if self.util.hostname == 'macico':
@@ -289,6 +290,7 @@ class ACCESS:
 
 
 		try:
+			self.util.logger.info('[・]Accessing Web page.. : %s',url)
 			access_page(url)
 			self.util.logger.info('[OK]Driver get web page: %s',url)
 			self.ls_url_sucess.append(url)
@@ -378,6 +380,7 @@ class NIKKEI:
 		self.util.read_config(ELICA_CONFIG)
 		self.url_login = 'https://www.nikkei.com/login'
 		self.url_logout= 'https://regist.nikkei.com/ds/etc/accounts/logout'
+		self.util.logger.info('[OK]NIKKEI INIT')
 
 
 	def get_edition_paper(self,obj_dt=None,type='en'):
@@ -413,7 +416,6 @@ class NIKKEI:
 		self.login()
 
 		# get paper obj 
-		self.util.logger.info('[・]Accessing Web page..')
 		is_obj = self.agent.to_page(self.get_paper_url(),**{'waittime':30})
 
 		# make subject
@@ -582,12 +584,11 @@ class BLOOMBERG:
 		self.agent = ACCESS()
 		self.util = UTIL(version=ENV,service_name=SEAVICE_NAME)
 		self.util.read_config(ELICA_CONFIG)
-
+		self.util.logger.info('[OK]BLOOMBERG INIT')
 
 	def get_contents(self):
 
 		# get paper obj 
-		self.util.logger.info('[・]Accessing Web page..')
 		is_obj = self.agent.to_page('https://www.bloomberg.co.jp/',**{'waittime':5})
 
 		# make subject		
