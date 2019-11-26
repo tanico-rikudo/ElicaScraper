@@ -559,20 +559,21 @@ class NIKKEI:
 	@staticmethod
 	def make_html(obj_content):
 		body =''
-		for obj_section in obj_content:
-			if isinstance(obj_section['section_name'],str):
-				body += '=== {0} ===<br>'.format(obj_section['section_name']) 
+		if not obj_content is None:
+			for obj_section in obj_content:
+				if isinstance(obj_section['section_name'],str):
+					body += '=== {0} ===<br>'.format(obj_section['section_name']) 
 
-			for obj_top_news in obj_section['ls_top_news']:
-				if isinstance(obj_top_news,str):
-					body += '　★ {0}<br>'.format(obj_top_news)
-			for obj_article in obj_section['ls_article']:
-				if isinstance(obj_article,str):
-					body += '　・{0}<br>'.format(obj_article)
-				else:
-					for obj_small_article in obj_article:
-						body += '　　・{0}<br>'.format(obj_small_article)
-			body += '<br>'
+				for obj_top_news in obj_section['ls_top_news']:
+					if isinstance(obj_top_news,str):
+						body += '　★ {0}<br>'.format(obj_top_news)
+				for obj_article in obj_section['ls_article']:
+					if isinstance(obj_article,str):
+						body += '　・{0}<br>'.format(obj_article)
+					else:
+						for obj_small_article in obj_article:
+							body += '　　・{0}<br>'.format(obj_small_article)
+				body += '<br>'
 
 		return body
 
@@ -701,13 +702,14 @@ class BLOOMBERG:
 	@staticmethod
 	def make_html(obj_content):
 		body =''
-		for obj_section in obj_content:
-			body += '=== {0} ===<br>'.format(obj_section['section_name']) 
+		if not obj_content is None:
+			for obj_section in obj_content:
+				body += '=== {0} ===<br>'.format(obj_section['section_name']) 
 
-			for obj_article in obj_section['ls_article']:
-				body += '　・{0}<br>'.format(obj_article)
+				for obj_article in obj_section['ls_article']:
+					body += '　・{0}<br>'.format(obj_article)
 
-			body += '<br>'
+				body += '<br>'
 
 		return body
 
