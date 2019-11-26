@@ -416,21 +416,24 @@ class NIKKEI:
 		self.util.logger.info('[・]Accessing Web page..')
 		is_obj = self.agent.to_page(self.get_paper_url(),**{'waittime':30})
 
-		if not is_obj:
-			self.util.logger.warning('[NG]Access is failed : May be not available today?')
-			return False
-
-		self.util.logger.info('[・]Scraping Web page..')
-		obj_content = self.scrape_paper()
-
 		# make subject
 		str_edition = self.get_edition_paper(obj_dt=None,type='ja')
 		str_subject = "{0:%Y%m%d}".format(self.util.dt_init)+'日経紙面('+str_edition+'刊)一覧'
 
-		# discard session
-		self.logout()
-		self.util.logger.info('[OK]Get content from web pagesucessfly')
-		self.agent.del_driver()
+		if is_obj:
+
+			self.util.logger.info('[・]Scraping Web page..')
+			obj_content = self.scrape_paper()
+
+			# discard session
+			self.logout()
+			self.util.logger.info('[OK]Get content from web pagesucessfly')
+			self.agent.del_driver()
+
+		else:
+			self.util.logger.warning('[NG]Access is failed : May be not available today?')
+			str_subject = '[NG]'+str_subject
+			obj_content = None
 
 		return  str_subject, obj_content
 
@@ -542,7 +545,7 @@ class NIKKEI:
 							ls_body.append(dct_section)
 
 					else:
-						self.util.logger.warning('[NG] ???(section title is null or excluded)')
+						self.util.logger.warning('[・] ???(section title is null or excluded * do it on purpose *)')
 
 				except Exception as e:
 					self.util.logger.warning('[NG] ???(No section title): %s',e)
