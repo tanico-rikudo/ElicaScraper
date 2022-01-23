@@ -592,14 +592,12 @@ class BLOOMBERG:
 		is_obj = self.agent.to_page('https://www.bloomberg.co.jp/',**{'waittime':5})
 
 		# make subject		
-		str_subject = "{0:%Y%m%d %H%M}".format(self.util.dt_init)+'Bloomberg一覧'
+		str_subject = "{0:%Y%m%d}".format(self.util.dt_init)+'Bloomberg('+"{0:%H:%M}".format(self.util.dt_init)+')一覧'
+
 
 		if is_obj:
 			self.util.logger.info('[・]Scraping Web page..')
 			obj_content = self.scrape_paper()
-
-
-			str_subject = "{0:%Y%m%d}".format(self.util.dt_init)+'Bloomberg('+"{0:%H:%M}".format(self.util.dt_init)+')一覧'
 
 			# discard session
 			self.util.logger.info('[OK]Get content from web pagesucessfly')
